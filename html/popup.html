@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Sesión</title>
+    <link rel="stylesheet" href="../css/popup.css">
+
+</head>
+
+<body>
+    <div class="compact-view">
+        <div class="compact-header">
+            <h2>Control de Sesión</h2>
+            <button id="viewDashboardBtn" class="dashboard-link">📊 Dashboard</button>
+        </div>
+        <div class="compact-content">
+            <div id="compactSession" class="compact-activity"
+                style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80px;">
+                <div id="compactType" class="activity-type">–</div>
+                <div id="compactDescription" class="activity-description">–</div>
+                <div class="time-display">
+                    <span id="compactDuration" class="current-time">0h 0m 00s</span>
+                    <div class="time-label">Tiempo transcurrido</div>
+                </div>
+                <div id="sessionControls" class="session-controls" style="display:none; gap:8px; margin-top:8px;">
+                    <button id="pauseSessionBtn" class="control-btn">⏸️ Pausar</button>
+                    <button id="resumeSessionBtn" class="control-btn">▶️ Reanudar</button>
+                    <button id="endSessionBtn" class="end-btn">⏹️ Finalizar</button>
+                </div>
+                <div id="breakControls" style="display:none; gap:8px; margin-top:8px;">
+                    <button id="endBreakBtn" class="end-btn">⏹️ Finalizar descanso</button>
+                </div>
+            </div>
+            <div id="noActivity" class="no-activity" style="display:none;">
+                <div class="no-activity-icon">🕒</div>
+                <div class="no-activity-text">No hay actividad activa</div>
+                <button id="startQuickSessionBtn" class="quick-start-btn">🚀 Iniciar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/popup.js"></script>
+</body>
+
+</html>

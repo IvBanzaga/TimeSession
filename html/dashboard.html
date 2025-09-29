@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TimeSession - Dashboard</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1>📊 Dashboard TimeSession</h1>
+        <p>Analiza tu productividad y tiempo dedicado</p>
+      </div>
+      <button id="openOptionsBtn" class="btn" style="background: #28a745;">⚙️ Configuración</button>
+      <button id="darkModeBtn" class="btn" style="background: #222; color: #fff; margin-left: 10px;">🌙 Modo
+        Oscuro</button>
+    </div>
+
+
+    <!-- Sesión actual -->
+    <div id="currentSessionBar" class="session-bar" style="display: none;">
+      <div class="session-bar-inner">
+        <div>
+          <div id="csType" class="session-type">⏱️ Sesión actual</div>
+          <div id="csDesc" class="session-desc">Descripción</div>
+        </div>
+        <div class="session-bar-right">
+          <div id="csTime" class="session-time">0m 00s</div>
+          <div class="session-bar-actions">
+            <button id="csPauseBtn" class="btn-small">⏸️ Pausar</button>
+            <button id="csResumeBtn" class="btn-small" style="display:none;">▶️ Reanudar</button>
+            <button id="csEndBtn" class="btn-small btn-danger">⏹️ Finalizar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalSessions">0</div>
+        <div class="stat-label">Sesiones Completadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalTime">0h</div>
+        <div class="stat-label">Tiempo Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalClients">0</div>
+        <div class="stat-label">Clientes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="avgSession">0m</div>
+        <div class="stat-label">Promedio por Sesión</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <h2>📈 Distribución de Tiempo</h2>
+      <div style="margin-bottom: 16px; text-align: right;">
+        <label for="chartRange" style="font-weight: 500; margin-right: 8px;">Ver por:</label>
+        <select id="chartRange" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd;">
+          <option value="day">Día</option>
+          <option value="week">Semana</option>
+          <option value="month">Mes</option>
+        </select>
+      </div>
+      <div style="max-width: 600px; margin: 0 auto;">
+        <canvas id="timeChart"></canvas>
+      </div>
+    </div>
+
+
+    <div class="export-section">
+      <button id="exportBtn" class="btn">📥 Exportar a CSV</button>
+      <button id="cleanDataBtn" class="btn" style="margin-left: 10px; background: #ff9800; color: white;">🧹 Limpiar
+        Datos Corruptos</button>
+      <button id="resetAllBtn" class="btn" style="margin-left: 10px; background: #dc3545; color: white;">🗑️ Reiniciar
+        Todo</button>
+    </div>
+
+    <div class="sessions-container">
+      <h2>� Gestión de Clientes</h2><br>
+      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <input type="text" id="newClientName" placeholder="Nombre del nuevo cliente"
+          style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <button id="addClientBtn" class="btn">➕ Agregar</button>
+      </div><br>
+      <div id="clientsList">
+        <!-- Los clientes se cargarán aquí -->
+      </div>
+    </div>
+    <div>
+      <br><br>
+    </div>
+    <div class="sessions-container">
+      <h2>�📋 Historial de Sesiones</h2>
+      <div id="sessionsList">
+        <!-- Las sesiones se cargarán aquí -->
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/lib/chart.js"></script>
+  <script src="../js/debug.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+
+</html>

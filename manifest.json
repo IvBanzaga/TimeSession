@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "TimeSession",
+  "version": "1.0",
+  "description": "Monitor de tiempo de trabajo con sesiones y dashboard",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "activeTab",
+    "tabs",
+    "notifications",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "action": {
+    "default_popup": "html/popup.html",
+    "default_title": "TimeSession"
+  },
+  "options_page": "html/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "js/content.js"
+      ],
+      "css": [
+        "css/content.css"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "icons": {
+    "16": "img/icon16.png",
+    "32": "img/icon32.png",
+    "48": "img/icon48.png",
+    "128": "img/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "js/lib/chart.js",
+        "css/content.css",
+        "html/dashboard.html",
+        "html/options.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+body.dark-mode .timesession-modal {
+    background: #232526;
+    color: #e0e0e0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+body.dark-mode .timesession-modal h2 {
+    color: #ffd700;
+}
+body.dark-mode .timesession-modal .option-btn {
+    background: #333;
+    color: #ffd700;
+    border: 1px solid #444;
+}
+body.dark-mode .timesession-modal .option-btn:hover {
+    background: #444;
+    border-color: #ffd700;
+}
+body.dark-mode .timesession-modal .break-btn {
+    border-color: #ff9800;
+    color: #ff9800;
+}
+body.dark-mode .timesession-modal .break-btn:hover {
+    background: #232526;
+}
+body.dark-mode .timesession-modal input,
+body.dark-mode .timesession-modal select,
+body.dark-mode .timesession-modal textarea {
+    background: #222;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+body.dark-mode .timesession-modal button {
+    background: #333;
+    color: #ffd700;
+}
+body.dark-mode .timesession-modal #startBtn,
+body.dark-mode .timesession-modal #startBreakBtn,
+body.dark-mode .timesession-modal #confirmContinue {
+    background: #4CAF50;
+    color: #ffd700;
+}
+body.dark-mode .timesession-modal #cancelBtn,
+body.dark-mode .timesession-modal #cancelBreakBtn,
+body.dark-mode .timesession-modal #stopAndChange {
+    background: #a94442;
+    color: #ffd700;
+}
+/* content.css */
+#timesession-modal-container, #timesession-validation-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999999;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.timesession-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.timesession-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px; /* Reducir un poco el ancho */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: left; /* Alinear texto a la izquierda */
+}
+
+.timesession-modal h2 {
+    text-align: center; /* Centrar solo el título */
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.timesession-modal .option-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    background: #fdfdfd;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left; /* Alinear texto de los botones a la izquierda */
+    color: #333;
+}
+
+.timesession-modal .option-btn:hover {
+    background: #f5f5f5;
+    border-color: #c0c0c0;
+}
+
+.timesession-modal .break-btn {
+    border-color: #f0ad4e;
+    color: #c88f3a;
+}
+.timesession-modal .break-btn:hover {
+    background: #fcf8e3;
+}
+
+.timesession-modal .hidden {
+    display: none;
+}
+
+.timesession-modal #clientSection,
+.timesession-modal #taskSection,
+.timesession-modal #breakSection {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.timesession-modal input,
+.timesession-modal select,
+.timesession-modal textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.timesession-modal textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.timesession-modal button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.timesession-modal #addClientBtn {
+    background: #eee;
+    color: #333;
+}
+
+.timesession-modal #startBtn,
+.timesession-modal #startBreakBtn,
+.timesession-modal #confirmContinue {
+    background: #5cb85c; /* Verde para acciones positivas */
+    color: white;
+    margin-right: 10px;
+}
+
+.timesession-modal #cancelBtn,
+.timesession-modal #cancelBreakBtn,
+.timesession-modal #stopAndChange {
+    background: #d9534f; /* Rojo para acciones negativas/cancelar */
+    color: white;
+}
