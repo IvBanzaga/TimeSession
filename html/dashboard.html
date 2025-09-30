@@ -76,6 +76,9 @@
 
     <div class="export-section">
       <button id="exportBtn" class="btn">📥 Exportar a CSV</button>
+      <input type="file" id="importFileInput" accept=".json,.csv" style="display:none" />
+      <button id="importBtn" class="btn" style="margin-left: 10px; background: #007bff; color: white;">📤 Importar
+        Datos</button>
       <button id="cleanDataBtn" class="btn" style="margin-left: 10px; background: #ff9800; color: white;">🧹 Limpiar
         Datos Corruptos</button>
       <button id="resetAllBtn" class="btn" style="margin-left: 10px; background: #dc3545; color: white;">🗑️ Reiniciar
@@ -97,7 +100,11 @@
       <br><br>
     </div>
     <div class="sessions-container">
-      <h2>�📋 Historial de Sesiones</h2>
+      <h2>📋 Historial de Sesiones</h2>
+      <div style="margin-bottom: 16px; text-align: right;">
+        <input type="text" id="sessionSearchInput" placeholder="🔍 Buscar en el historial..."
+          style="padding: 8px; border-radius: 6px; border: 1px solid #ddd; width: 240px;">
+      </div>
       <div id="sessionsList">
         <!-- Las sesiones se cargarán aquí -->
       </div>

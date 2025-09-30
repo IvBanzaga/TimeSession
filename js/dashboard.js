@@ -3,6 +3,9 @@
 
 // Variable global para sesiones
 let sessions = [];
+let filteredSessions = null;
+let currentSessionPage = 1;
+const SESSIONS_PER_PAGE = 5;
 
 document.addEventListener('DOMContentLoaded', () => {
     // MODO OSCURO: cargar preferencia y aplicar
@@ -149,6 +152,123 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resetAllBtn').addEventListener('click', resetAllData);
     document.getElementById('addClientBtn').addEventListener('click', addClient);
 
+    // Importar datos
+    document.getElementById('importBtn').addEventListener('click', () => {
+        document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            let importedData;
+            try {
+                if (file.name.endsWith('.json')) {
+                    importedData = JSON.parse(evt.target.result);
+                } else if (file.name.endsWith('.csv')) {
+                    importedData = parseCSV(evt.target.result);
+                } else {
+                    alert('Formato no soportado. Usa JSON o CSV.');
+                    return;
+                }
+            } catch (err) {
+                alert('Error al leer el archivo: ' + err.message);
+                return;
+            }
+            // Validar y convertir datos importados
+            function parseEuropeanDate(dateStr, timeStr) {
+                // dateStr: '29/9/2025', timeStr: '19:30:18'
+                const [d, m, y] = dateStr.split('/').map(Number);
+                const [hh, mm, ss] = timeStr.split(':').map(Number);
+                return new Date(y, m - 1, d, hh, mm, ss).getTime();
+            }
+            function normalizeSession(s) {
+                // Convertir campos a tipos correctos
+                const session = { ...s };
+                // Si vienen como Fecha, Inicio, Fin (formato europeo)
+                if (session.Fecha && session.Inicio && session.Fecha.includes('/') && session.Inicio.includes(':')) {
+                    session.startTime = parseEuropeanDate(session.Fecha, session.Inicio);
+                }
+                if (session.Fecha && session.Fin && session.Fecha.includes('/') && session.Fin.includes(':')) {
+                    session.endTime = parseEuropeanDate(session.Fecha, session.Fin);
+                }
+                // Si vienen como string estándar
+                if (typeof session.startTime === 'string') session.startTime = Date.parse(session.startTime);
+                if (typeof session.endTime === 'string') session.endTime = Date.parse(session.endTime);
+                if (typeof session.duration === 'string') session.duration = parseInt(session.duration, 10);
+                if (session.startTime && session.endTime && (!session.duration || isNaN(session.duration))) {
+                    session.duration = session.endTime - session.startTime;
+                }
+                // Normalizar tipo y descripción
+                if (!session.type && session.Tipo) session.type = session.Tipo.toLowerCase();
+                if (!session.description && session.Descripción) session.description = session.Descripción;
+                if (!session.client && session.Cliente) session.client = session.Cliente;
+                if (!session.id && session.ID) session.id = session.ID;
+                if (!session.id) session.id = `imported_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+                return session;
+            }
+            function normalizeClient(c) {
+                const client = { ...c };
+                if (!client.id) client.id = `imported_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+                if (!client.name && client.Cliente) client.name = client.Cliente;
+                return client;
+            }
+            // Si es objeto con sesiones y/o clientes
+            if (importedData.sessions && Array.isArray(importedData.sessions)) {
+                const normSessions = importedData.sessions.map(normalizeSession);
+                const validSessions = normSessions.filter(s => typeof s.startTime === 'number' && typeof s.endTime === 'number' && !isNaN(s.startTime) && !isNaN(s.endTime));
+                console.log('Sesiones importadas:', normSessions);
+                console.log('Sesiones válidas:', validSessions);
+                chrome.storage.local.set({ sessions: normSessions }, () => {
+                    alert(`Sesiones importadas: ${normSessions.length}\nSesiones válidas para historial: ${validSessions.length}`);
+                    loadDashboardData();
+                });
+            }
+            if (importedData.clients && Array.isArray(importedData.clients)) {
+                const normClients = importedData.clients.map(normalizeClient);
+                console.log('Clientes importados:', normClients);
+                chrome.storage.local.set({ clients: normClients }, () => {
+                    alert(`Clientes importados: ${normClients.length}`);
+                    loadDashboardData();
+                });
+            }
+            // Si es solo sesiones (CSV o array)
+            if (Array.isArray(importedData) && importedData.length && importedData[0].id) {
+                const normSessions = importedData.map(normalizeSession);
+                const validSessions = normSessions.filter(s => typeof s.startTime === 'number' && typeof s.endTime === 'number' && !isNaN(s.startTime) && !isNaN(s.endTime));
+                console.log('Sesiones importadas:', normSessions);
+                console.log('Sesiones válidas:', validSessions);
+                chrome.storage.local.set({ sessions: normSessions }, () => {
+                    alert(`Sesiones importadas: ${normSessions.length}\nSesiones válidas para historial: ${validSessions.length}`);
+                    loadDashboardData();
+                });
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // Función para parsear CSV a array de sesiones
+    function parseCSV(csv) {
+        const lines = csv.split('\n').filter(l => l.trim().length > 0);
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+        return lines.slice(1).map(line => {
+            const values = line.split(',').map(v => v.replace(/"/g, '').trim());
+            const obj = {};
+            headers.forEach((h, i) => {
+                obj[h] = values[i];
+            });
+            // Convertir campos numéricos
+            if (obj['ID']) obj.id = obj['ID'];
+            if (obj['Inicio']) obj.startTime = new Date(`${obj['Fecha']} ${obj['Inicio']}`).getTime();
+            if (obj['Fin']) obj.endTime = new Date(`${obj['Fecha']} ${obj['Fin']}`).getTime();
+            if (obj['Duración (minutos)']) obj.duration = parseInt(obj['Duración (minutos)'], 10) * 60000;
+            obj.type = obj['Tipo'] || '';
+            obj.description = obj['Descripción'] || '';
+            obj.client = obj['Cliente'] || '';
+            return obj;
+        });
+    }
+
     // Abrir página de opciones/configuración
     const optionsBtn = document.getElementById('openOptionsBtn');
     if (optionsBtn) {
@@ -182,7 +302,9 @@ function addModalListeners() {
 /* TODO: Carga los datos de sesiones y clientes y actualiza la vista del dashboard */
 function loadDashboardData() {
     chrome.storage.local.get(['sessions', 'clients'], (data) => {
-        sessions = data.sessions || [];
+    sessions = data.sessions || [];
+    filteredSessions = null;
+    currentSessionPage = 1; // Reiniciar a la primera página al cargar
         const clients = data.clients || [];
 
 
@@ -213,7 +335,9 @@ function updateStats(sessions, clients) {
 /* TODO: Renderiza la lista de sesiones en el dashboard */
 function renderSessionsList(sessions) {
     const container = document.getElementById('sessionsList');
-    if (!sessions || sessions.length === 0) {
+    // Usar sesiones filtradas si hay búsqueda activa
+    const sourceSessions = filteredSessions !== null ? filteredSessions : sessions;
+    if (!sourceSessions || sourceSessions.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <h3>🕐 No hay sesiones registradas</h3>
@@ -222,12 +346,16 @@ function renderSessionsList(sessions) {
         return;
     }
 
-    container.innerHTML = '';
-    const recentSessions = sessions.filter(s => s.endTime)
-        .sort((a, b) => b.startTime - a.startTime)
-        .slice(0, 20);
+    // Filtrar y ordenar sesiones finalizadas
+    const allSessions = sourceSessions.filter(s => s.endTime)
+        .sort((a, b) => b.startTime - a.startTime);
+    const totalPages = Math.max(1, Math.ceil(allSessions.length / SESSIONS_PER_PAGE));
+    // Limitar a la página actual
+    const startIdx = (currentSessionPage - 1) * SESSIONS_PER_PAGE;
+    const pageSessions = allSessions.slice(startIdx, startIdx + SESSIONS_PER_PAGE);
 
-    recentSessions.forEach(session => {
+    container.innerHTML = '';
+    pageSessions.forEach(session => {
         let duration = 0;
         if (typeof session.startTime === 'number' && typeof session.endTime === 'number') {
             duration = Math.round((session.endTime - session.startTime) / (1000 * 60));
@@ -261,7 +389,55 @@ function renderSessionsList(sessions) {
         container.appendChild(sessionItem);
     });
 
-    createTimeChart(sessions.filter(s => s.endTime));
+    // Controles de paginación
+    if (totalPages > 1) {
+        const pagination = document.createElement('div');
+        pagination.className = 'pagination-controls';
+        pagination.style = 'display: flex; justify-content: center; align-items: center; gap: 10px; margin: 20px 0;';
+        pagination.innerHTML = `
+            <button id="prevSessionPage" class="btn" ${currentSessionPage === 1 ? 'disabled' : ''}>⬅️ Anterior</button>
+            <span>Página ${currentSessionPage} de ${totalPages}</span>
+            <button id="nextSessionPage" class="btn" ${currentSessionPage === totalPages ? 'disabled' : ''}>Siguiente ➡️</button>
+        `;
+        container.appendChild(pagination);
+
+        // Listeners de paginación
+        document.getElementById('prevSessionPage').onclick = () => {
+            if (currentSessionPage > 1) {
+                currentSessionPage--;
+                renderSessionsList(sessions);
+            }
+        };
+        document.getElementById('nextSessionPage').onclick = () => {
+            if (currentSessionPage < totalPages) {
+                currentSessionPage++;
+                renderSessionsList(sessions);
+            }
+        };
+    }
+
+    createTimeChart(sourceSessions.filter(s => s.endTime));
+    // Listener para búsqueda en el historial
+    const searchInput = document.getElementById('sessionSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const value = e.target.value.trim().toLowerCase();
+            if (value.length === 0) {
+                filteredSessions = null;
+            } else {
+                filteredSessions = sessions.filter(s => {
+                    // Buscar en descripción, cliente y tipo
+                    return (
+                        (s.description && s.description.toLowerCase().includes(value)) ||
+                        (s.client && s.client.toLowerCase().includes(value)) ||
+                        (s.type && getTypeLabel(s.type).toLowerCase().includes(value))
+                    );
+                });
+            }
+            currentSessionPage = 1;
+            renderSessionsList(sessions);
+        });
+    }
 }
 
 /* TODO: Devuelve el icono correspondiente al tipo de sesión */

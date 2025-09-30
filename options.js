@@ -69,8 +69,8 @@ function updateClientsList() {
 function saveSettings() {
   var validationInterval = parseInt(document.getElementById('validationInterval').value);
   var askOnBrowserStart = document.getElementById('askOnBrowserStart').checked;
-  if (validationInterval < 5 || validationInterval > 480) {
-    showStatus('El intervalo debe estar entre 5 y 480 minutos', 'error');
+  if (validationInterval < 1 || validationInterval > 480) {
+    showStatus('El intervalo debe estar entre 1 y 480 minutos', 'error');
     return;
   }
   chrome.storage.local.set({

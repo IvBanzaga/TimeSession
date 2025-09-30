@@ -18,11 +18,69 @@
         }
     });
 
-    // Función para pausar sesión por inactividad
+    // Modal de pausa por inactividad
+    let inactivityModal = null;
+    let inactivityModalIsDark = null;
+    function renderInactivityModal(isDark) {
+        if (!inactivityModal) return;
+        inactivityModal.innerHTML = `
+            <div class="timesession-overlay" style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: ${isDark ? 'rgba(30,30,30,0.55)' : 'rgba(0,0,0,0.25)'}; z-index: 2147483646;"></div>
+            <div class="timesession-modal" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 340px; min-width: 260px; z-index: 2147483647; background: ${isDark ? '#222' : '#fff'}; color: ${isDark ? '#eee' : '#222'}; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.22); padding: 36px 28px; display: flex; flex-direction: column; align-items: center;">
+                <h2 style="margin-bottom: 18px; text-align:center; color:white">⏸️ Tiempo detenido por inactividad</h2>
+                <p style="margin-bottom: 18px; color: ${isDark ? '#bbb' : '#555'}; text-align:center;">La sesión se ha pausado automáticamente.<br>¿Quieres reanudar el conteo?</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button id="resumeInactivityBtn" class="btn btn-primary">▶️ Reanudar</button>
+                    <button id="acceptInactivityBtn" class="btn btn-secondary">Aceptar</button>
+                </div>
+            </div>
+        `;
+        document.body.style.overflow = 'hidden';
+        inactivityModal.querySelector('#resumeInactivityBtn').onclick = function() {
+            chrome.runtime.sendMessage({ action: 'resumeSession' }, () => {
+                hideInactivityModal();
+                resetInactivityTimer();
+            });
+        };
+        inactivityModal.querySelector('#acceptInactivityBtn').onclick = function() {
+            hideInactivityModal();
+        };
+    }
+
+    function showInactivityModal() {
+        if (inactivityModal) return;
+        inactivityModal = document.createElement('div');
+        inactivityModal.id = 'timesession-inactivity-modal';
+        chrome.storage.local.get(['darkMode'], function(data) {
+            inactivityModalIsDark = !!data.darkMode;
+            renderInactivityModal(inactivityModalIsDark);
+            document.body.appendChild(inactivityModal);
+        });
+    }
+    function hideInactivityModal() {
+        if (inactivityModal) {
+            inactivityModal.remove();
+            inactivityModal = null;
+            inactivityModalIsDark = null;
+            document.body.style.overflow = 'auto';
+        }
+// Listener para cambios en darkMode y actualizar el modal si está abierto
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.darkMode && inactivityModal) {
+        inactivityModalIsDark = !!changes.darkMode.newValue;
+        renderInactivityModal(inactivityModalIsDark);
+    }
+});
+    }
+
+    // Función para pausar sesión por inactividad SOLO si hay sesión activa
     function pauseSessionForInactivity() {
-        chrome.runtime.sendMessage({ action: 'pauseSession' }, () => {
-            // Opcional: mostrar aviso visual
-            console.log('[TimeSession] Sesión pausada por inactividad');
+        chrome.storage.local.get(['currentSession'], ({ currentSession }) => {
+            if (currentSession && !currentSession.isPaused) {
+                chrome.runtime.sendMessage({ action: 'pauseSession' }, () => {
+                    showInactivityModal();
+                    console.log('[TimeSession] Sesión pausada por inactividad');
+                });
+            }
         });
     }
 
@@ -313,6 +371,23 @@
                 });
             }
         });
+    });
+
+    // Escuchar cambios en storage para actualizar temporizador y popup
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.currentSession) {
+            const cs = changes.currentSession.newValue;
+            if (cs && !cs.isPaused) {
+                resetInactivityTimer();
+            } else if (cs && cs.isPaused) {
+                // Si la sesión se pausa desde otro tab, mostrar el popup
+                showInactivityModal();
+            } else if (!cs) {
+                // Si se elimina la sesión, limpiar popup y temporizador
+                hideInactivityModal();
+                if (inactivityTimer) clearTimeout(inactivityTimer);
+            }
+        }
     });
 
     // Content script configurado completamente
