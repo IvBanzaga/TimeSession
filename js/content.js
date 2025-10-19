@@ -35,13 +35,13 @@
             </div>
         `;
         document.body.style.overflow = 'hidden';
-        inactivityModal.querySelector('#resumeInactivityBtn').onclick = function() {
+        inactivityModal.querySelector('#resumeInactivityBtn').onclick = function () {
             chrome.runtime.sendMessage({ action: 'resumeSession' }, () => {
                 hideInactivityModal();
                 resetInactivityTimer();
             });
         };
-        inactivityModal.querySelector('#acceptInactivityBtn').onclick = function() {
+        inactivityModal.querySelector('#acceptInactivityBtn').onclick = function () {
             hideInactivityModal();
         };
     }
@@ -50,7 +50,7 @@
         if (inactivityModal) return;
         inactivityModal = document.createElement('div');
         inactivityModal.id = 'timesession-inactivity-modal';
-        chrome.storage.local.get(['darkMode'], function(data) {
+        chrome.storage.local.get(['darkMode'], function (data) {
             inactivityModalIsDark = !!data.darkMode;
             renderInactivityModal(inactivityModalIsDark);
             document.body.appendChild(inactivityModal);
@@ -63,13 +63,13 @@
             inactivityModalIsDark = null;
             document.body.style.overflow = 'auto';
         }
-// Listener para cambios en darkMode y actualizar el modal si está abierto
-chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.darkMode && inactivityModal) {
-        inactivityModalIsDark = !!changes.darkMode.newValue;
-        renderInactivityModal(inactivityModalIsDark);
-    }
-});
+        // Listener para cambios en darkMode y actualizar el modal si está abierto
+        chrome.storage.onChanged.addListener((changes, area) => {
+            if (area === 'local' && changes.darkMode && inactivityModal) {
+                inactivityModalIsDark = !!changes.darkMode.newValue;
+                renderInactivityModal(inactivityModalIsDark);
+            }
+        });
     }
 
     // Función para pausar sesión por inactividad SOLO si hay sesión activa
@@ -148,7 +148,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
             // Listener para modo oscuro
             const darkBtn = modal.querySelector('#darkModeModalBtn');
             if (darkBtn) {
-                chrome.storage.local.get(['darkMode'], function(data) {
+                chrome.storage.local.get(['darkMode'], function (data) {
                     if (data.darkMode) {
                         document.body.classList.add('dark-mode');
                         darkBtn.textContent = '☀️';
@@ -157,7 +157,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
                         darkBtn.textContent = '🌙';
                     }
                 });
-                darkBtn.onclick = function() {
+                darkBtn.onclick = function () {
                     const isDark = !document.body.classList.contains('dark-mode');
                     if (isDark) {
                         document.body.classList.add('dark-mode');
@@ -199,7 +199,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
         modal.querySelectorAll('.option-btn').forEach(btn => {
             btn.onclick = () => handleActivitySelection(btn.dataset.type);
         });
-        
+
         const startBtn = modal.querySelector('#startBtn');
         if (startBtn) startBtn.onclick = startSession;
 
@@ -321,7 +321,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
     // Listener para mensajes del background
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        
+
         if (request.action === "showInitialModal") {
             chrome.storage.local.get('config', ({ config = {} }) => {
                 if (config.askOnBrowserStart === true) {
@@ -336,15 +336,15 @@ chrome.storage.onChanged.addListener((changes, area) => {
     });
 
     // Función para forzar mostrar modal (para debugging)
-    window.timeSessionForceModal = function() {
+    window.timeSessionForceModal = function () {
         showInitialModal();
     };
 
     // Auto-check cuando se carga la página
-    
+
     // Verificar estado actual
     chrome.runtime.sendMessage({ action: "checkState" }, (response) => {
-        
+
         // Si no hay sesión activa ni descanso, consultar config antes de mostrar modal
         if (!response || (!response.currentSession && !response.breakInfo)) {
             chrome.storage.local.get('config', ({ config = {} }) => {
@@ -390,5 +390,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
         }
     });
 
-    // Content script configurado completamente
+
+
+
+
 })();

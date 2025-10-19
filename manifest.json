@@ -10,7 +10,9 @@
     "activeTab",
     "tabs",
     "notifications",
-    "scripting"
+    "scripting",
+    "windows",
+    "unlimitedStorage"
   ],
   "background": {
     "service_worker": "js/background.js"
