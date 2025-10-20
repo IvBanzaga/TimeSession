@@ -5,6 +5,9 @@ console.log('TimeSession Background: Service Worker cargado');
 // Flag para evitar múltiples pausas simultáneas
 let pausingInProgress = false;
 
+// Variable para almacenar el último tiempo de actividad
+let lastActivityTime = Date.now();
+
 // 🔥 Función para detectar y pausar sesión si el navegador estuvo cerrado
 function checkAndPauseIfBrowserWasClosed() {
     if (pausingInProgress) {
@@ -66,12 +69,22 @@ function checkAndPauseIfBrowserWasClosed() {
             pausingInProgress = false;
         }
 
-        // Recrear alarma de backup
-        chrome.alarms.get('backupSessionAlarm', (alarm) => {
-            if (!alarm) {
-                chrome.alarms.create('backupSessionAlarm', { periodInMinutes: 0.5 });
-            }
-        });
+        // Recrear alarmas si hay una sesión activa no pausada
+        if (data.currentSession && !data.currentSession.isPaused) {
+            // Recrear alarma de backup
+            chrome.alarms.get('backupSessionAlarm', (alarm) => {
+                if (!alarm) {
+                    chrome.alarms.create('backupSessionAlarm', { periodInMinutes: 0.5 });
+                }
+            });
+
+            // Recrear alarma de validación
+            chrome.alarms.get('sessionValidation', (alarm) => {
+                if (!alarm) {
+                    resetValidationAlarm();
+                }
+            });
+        }
     });
 }
 
@@ -91,8 +104,26 @@ setTimeout(() => {
     checkAndPauseIfBrowserWasClosed();
 }, 100);
 
+// Verificar cada 30 segundos si debe pausar por inactividad
+setInterval(() => {
+    chrome.storage.local.get(['currentSession', 'config'], ({ currentSession, config }) => {
+        if (!currentSession || currentSession.isPaused) return;
+
+        const validationInterval = (config?.validationInterval || 60) * 60000; // Convertir minutos a ms
+        const timeSinceLastActivity = Date.now() - lastActivityTime;
+
+        if (timeSinceLastActivity >= validationInterval) {
+            console.log('⏰ Tiempo de inactividad alcanzado. Pausando sesión...');
+            pauseSession();
+            showModalInActiveTab('showValidationModal');
+            lastActivityTime = Date.now(); // Reset para evitar múltiples pausas
+        }
+    });
+}, 30000); // Cada 30 segundos
+
 // Función auxiliar para hacer backup de la sesión actual
 function backupCurrentSession() {
+    lastActivityTime = Date.now(); // Actualizar tiempo de actividad en cada backup
     chrome.storage.local.get('currentSession', ({ currentSession }) => {
         if (currentSession && !currentSession.isPaused && currentSession.startTime) {
             const elapsed = Date.now() - currentSession.startTime;
@@ -113,8 +144,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return;
     }
 
-    // Hacer backup en cada interacción (excepto checkState para evitar bucles)
+    // Actualizar tiempo de actividad y hacer backup en cada interacción
     if (request.action !== 'checkState') {
+        lastActivityTime = Date.now();
         backupCurrentSession();
     }
 
@@ -214,7 +246,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Alarmas
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (!alarm) return;
+    console.log('⏰ Alarma disparada:', alarm.name);
     if (alarm.name === 'sessionValidation') {
+        console.log('📋 Pausando sesión por inactividad...');
+        // Pausar automáticamente la sesión
+        pauseSession();
+        // Mostrar modal para preguntar si reanudar
         showModalInActiveTab('showValidationModal');
     } else if (alarm.name === 'breakOver') {
         endBreak();
@@ -397,6 +434,9 @@ function resumeSession() {
                     chrome.alarms.create('backupSessionAlarm', { periodInMinutes: 0.5 });
                 }
             });
+
+            // Resetear alarma de validación con el intervalo configurado
+            resetValidationAlarm();
 
             chrome.storage.local.set({ currentSession }, updateIcon);
         }
